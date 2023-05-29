@@ -39,10 +39,12 @@ def get_batch(data, batch_size, context_length):
     return x, y
 
 
-def training_loop(model, data, epochs, optimizer, batch_size, context_length):
+def training_loop(model, data, epochs, optimizer, batch_size, context_length, device):
     training_loss = []
+    model.to(device)
     for epoch in range(epochs):
         x, y = get_batch(data, batch_size, context_length)
+        x, y = x.to(device), y.to(device)
 
         logits, loss = model(x, y)
         optimizer.zero_grad(set_to_none=True)
