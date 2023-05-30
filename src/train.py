@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--train-percentage", type=float, default=0.8, help="The split percentage for training data")
     parser.add_argument("--eval-percentage", type=float, default=0.1, help="The split percentage for evaluation data")
     parser.add_argument("--test-percentage", type=float, default=0.1, help="The split percentage for testing data")
-    parser.add_argument("--device", type=str, default="mps", help="The device where we want to train the model")
+    parser.add_argument("--device", type=str, default="cpu", help="The device where we want to train the model")
 
     # Fetch the params from the parser
     args = parser.parse_args()
