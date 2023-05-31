@@ -28,6 +28,10 @@ if __name__ == "__main__":
     eval_percentage = args.eval_percentage
     test_percentage = args.test_percentage
 
+    assert 0 < batch_size, "Batch size should be bigger than 0"
+    assert 0.0 < lr < 0.99, "Learning rate should be float between 0.0 and 0.99"
+    assert epochs > 0, "Number of epochs should be positive"
+
     device = args.device
 
     text = read_data(data_path)
