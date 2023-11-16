@@ -50,7 +50,7 @@ def training_loop(model, train_data, eval_data, epochs, eval_interval, optimizer
     
     for epoch in range(epochs):
         if epoch % eval_interval == 0:
-            losses = validation(model, train_data, eval_data, 100, device)
+            losses = validation(model, train_data, eval_data, 100, batch_size, context_length, device)
             training_loss.append(losses['train'])
             eval_loss.append(losses['eval'])
             print(f"Epoch: {epoch}, Training Loss: {losses['train']}, Eval Loss: {losses['eval']}")
@@ -66,7 +66,7 @@ def training_loop(model, train_data, eval_data, epochs, eval_interval, optimizer
     return training_loss, eval_loss
 
 @torch.no_grad()
-def validation(model, train_data, eval_data, eval_epoch, device="mps"):
+def validation(model, train_data, eval_data, eval_epoch, batch_size, context_length, device="mps"):
     output = {}
     model.eval()
     model.to(device)
@@ -74,7 +74,7 @@ def validation(model, train_data, eval_data, eval_epoch, device="mps"):
     # train data
     losses = torch.zeros(eval_epoch)
     for k in range(eval_epoch):
-        X, y = get_batch(train_data)
+        X, y = get_batch(train_data, batch_size, context_length)
         X, y = X.to(device), y.to(device)
         logits, loss = model(X, y)
         losses[k] = loss.item()
@@ -84,7 +84,7 @@ def validation(model, train_data, eval_data, eval_epoch, device="mps"):
     # eval data
     losses = torch.zeros(eval_epoch)
     for k in range(eval_epoch):
-        X, y = get_batch(eval_data)
+        X, y = get_batch(eval_data, batch_size, context_length)
         X, y = X.to(device), y.to(device)
         logits, loss = model(X, y)
         losses[k] = loss.item()
