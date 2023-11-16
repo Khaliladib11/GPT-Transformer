@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 import torch
 
 
@@ -39,11 +41,21 @@ def get_batch(data, batch_size, context_length):
     return x, y
 
 
-def training_loop(model, data, epochs, optimizer, batch_size, context_length, device):
-    training_loss = []
+def training_loop(model, train_data, eval_data, epochs, eval_interval, optimizer, batch_size, context_length, device):
+    
     model.to(device)
+    model.train()
+    training_loss = []
+    eval_loss = []
+    
     for epoch in range(epochs):
-        x, y = get_batch(data, batch_size, context_length)
+        if epoch % eval_interval == 0:
+            losses = validation(model, train_data, eval_data, 100, device)
+            training_loss.append(losses['train'])
+            eval_loss.append(losses['eval'])
+            print(f"Epoch: {epoch}, Training Loss: {losses['train']}, Eval Loss: {losses['eval']}")
+    
+        x, y = get_batch(train_data, batch_size, context_length)
         x, y = x.to(device), y.to(device)
 
         logits, loss = model(x, y)
@@ -51,7 +63,76 @@ def training_loop(model, data, epochs, optimizer, batch_size, context_length, de
         loss.backward()
         optimizer.step()
 
-        training_loss.append(loss.item())
+    return training_loss, eval_loss
 
-    return training_loss
+@torch.no_grad()
+def validation(model, train_data, eval_data, eval_epoch, device="mps"):
+    output = {}
+    model.eval()
+    model.to(device)
 
+    # train data
+    losses = torch.zeros(eval_epoch)
+    for k in range(eval_epoch):
+        X, y = get_batch(train_data)
+        X, y = X.to(device), y.to(device)
+        logits, loss = model(X, y)
+        losses[k] = loss.item()
+
+    output['train'] = losses.mean()
+
+    # eval data
+    losses = torch.zeros(eval_epoch)
+    for k in range(eval_epoch):
+        X, y = get_batch(eval_data)
+        X, y = X.to(device), y.to(device)
+        logits, loss = model(X, y)
+        losses[k] = loss.item()
+
+    output['eval'] = losses.mean()
+
+    model.train()
+    return output
+
+    
+def plot_loss(train_loss_values, val_loss_values):
+    """
+    Plot the training and validation loss values over training epochs with a line plot.
+
+    Parameters:
+    - train_loss_values (list): List of training loss values at each epoch.
+    - val_loss_values (list): List of validation loss values at each epoch.
+    """
+    epochs = range(1, len(train_loss_values) + 1)
+
+    # Plotting the training loss values with a line plot
+    plt.plot(epochs, train_loss_values, label='Training Loss', marker='o', linestyle='-')
+
+    # Plotting the validation loss values with a line plot
+    plt.plot(epochs, val_loss_values, label='Validation Loss', marker='o', linestyle='-')
+
+    plt.title('Training and Validation Loss Over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Display the plot
+    plt.show()
+    """
+    Plot the loss values over training epochs with a line plot.
+
+    Parameters:
+    - loss_values (list): List of loss values at each training epoch.
+    """
+    epochs = range(1, len(loss_values) + 1)
+
+    # Plotting the loss values with a line plot
+    plt.plot(loss_values, label='Training Loss')
+
+    plt.title('Training Loss Over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Display the plot
+    plt.show()

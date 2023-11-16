@@ -34,7 +34,7 @@ class BigramLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, context, max_tokens):
+    def generate(self, context, max_tokens, device="mps"):
         # Fist of all the context is with (B, C) shape
         for _ in range(max_tokens):
             # we get the prediction, the logits will be in (B, C, V) shape and the loss will be None
@@ -44,7 +44,10 @@ class BigramLanguageModel(nn.Module):
             # get the probability distribution where the sum of probabilities are equal to 1
             probs = F.softmax(logits, dim=1)
             # get random sample distribution from the probability
-            next_token = torch.multinomial(probs, num_samples=1)
+            if device == "mps":
+                next_token = torch.multinomial(probs.to("cpu"), num_samples=1).to(device)
+            else:
+                next_token = torch.multinomial(probs.to("cpu"), num_samples=1).to(device)
             # concatenate the generated token with the previous set of tokens
             context = torch.cat((context, next_token), dim=1)
 
